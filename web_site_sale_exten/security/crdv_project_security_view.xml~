@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.module.category" id="module_category_expense">
+            <field name="name">Project Expense</field>
+            <field name="sequence">2</field>
+        </record>
+        
+        <record id="group_expense_user" model="res.groups">
+            <field name="name">User</field>
+            <field name="sequence">10</field>
+            <field name="category_id" ref="crdv_project.module_category_expense"/>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root'))]"/>
+        </record>
+        
+        <record id="group_supervisor_user" model="res.groups">
+            <field name="name">Supervisor</field>
+            <field name="sequence">4</field>
+            <field name="category_id" ref="crdv_project.module_category_expense"/>
+            <field name="implied_ids" eval="[(4, ref('group_expense_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root'))]"/>
+        </record>
+        
+        
+          <record id="group_store_manager" model="res.groups">
+                <field name="name">Store Manager</field>
+                <field name="sequence">1</field>
+                <field name="category_id" ref="crdv_project.module_category_expense"/>
+                <field name="implied_ids" eval="[(4, ref('group_supervisor_user'))]"/>
+                <field name="users" eval="[(4, ref('base.user_root'))]"/>
+            </record>
+
+
+	    <record id="group_apm_user" model="res.groups">
+	        <field name="name">APM</field>
+	        <field name="sequence">3</field>
+	        <field name="category_id" ref="crdv_project.module_category_expense"/>
+	        <field name="implied_ids" eval="[(4, ref('group_store_manager'))]"/>
+	        <field name="users" eval="[(4, ref('base.user_root'))]"/>
+       </record>
+        
+       <record id="group_pm_user" model="res.groups">
+            <field name="name">PM</field>
+            <field name="sequence">2</field>
+            <field name="category_id" ref="crdv_project.module_category_expense"/>
+            <field name="implied_ids" eval="[(4, ref('group_apm_user'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root'))]"/>
+        </record>
+
+
+	  <record id="group_director_user" model="res.groups">
+        <field name="name">Director</field>
+        <field name="sequence">1</field>
+        <field name="category_id" ref="crdv_project.module_category_expense"/>
+        <field name="implied_ids" eval="[(4, ref('group_pm_user'))]"/>
+        <field name="users" eval="[(4, ref('base.user_root'))]"/>
+    </record>
+
+    <!--  Rules -->
+    
+    <!-- Project Rules -->
+    
+    <record id="crdv_project_apm_rule" model="ir.rule">
+        <field name="name">APM Projects</field>
+        <field ref="model_crdv_project" name="model_id"/>
+        <field name="domain_force">['|',('contractor_lines.ass_mgr_id','=',user.id),('batch_lines.ass_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_apm_user'))]"/>
+    </record>
+    
+    <record id="crdv_project_pm_rule" model="ir.rule">
+        <field name="name">PM Projects</field>
+        <field ref="model_crdv_project" name="model_id"/>
+        <field name="domain_force">[('project_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_pm_user'))]"/>
+    </record>
+    
+    <record id="crdv_project_directors_rule" model="ir.rule">
+        <field name="name">directors Projects</field>
+        <field ref="model_crdv_project" name="model_id"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_director_user'))]"/>
+    </record>
+    
+    <!-- Material Indents Rules -->
+    
+    <record id="material_inent_supervisor_rule" model="ir.rule">
+        <field name="name">Supervisor Indents</field>
+        <field ref="model_project_indents" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('supervisor_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_supervisor_user'))]"/>
+    </record>
+
+    <record id="material_inent_sm_rule" model="ir.rule">
+        <field name="name">Store Mgr Indents</field>
+        <field ref="model_project_indents" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('store_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_store_manager'))]"/>
+    </record>
+    
+    <record id="material_inent_apm_rule" model="ir.rule">
+        <field name="name">Assistant Proj Mgr Indents</field>
+        <field ref="model_project_indents" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('ass_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_apm_user'))]"/>
+    </record>
+    
+    <record id="material_inent_pm_rule" model="ir.rule">
+        <field name="name">Proj Mgr Indents</field>
+        <field ref="model_project_indents" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('project_id.project_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_pm_user'))]"/>
+    </record> 
+    
+    <record id="material_inent_director_rule" model="ir.rule">
+        <field name="name">Director Indents</field>
+        <field ref="model_project_indents" name="model_id"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_director_user'))]"/>
+    </record> 
+    
+    <!-- Warehouse Indents Rules -->
+
+    <record id="wh_material_inent_sm_rule" model="ir.rule">
+        <field name="name">Store Mgr WH Indents</field>
+        <field ref="model_warehouse_indent" name="model_id"/>
+        <field name="domain_force">[('user_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_store_manager'))]"/>
+    </record>
+    
+    <record id="wh_material_inent_apm_rule" model="ir.rule">
+        <field name="name">Assistant Proj Mgr WH Indents</field>
+        <field ref="model_warehouse_indent" name="model_id"/>
+        <field name="domain_force">[('user_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_apm_user'))]"/>
+    </record>
+    
+    <record id="wh_material_inent_pm_rule" model="ir.rule">
+        <field name="name">Proj Mgr WH Indents</field>
+        <field ref="model_warehouse_indent" name="model_id"/>
+        <field name="domain_force">[('project_id.project_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_pm_user'))]"/>
+    </record> 
+    
+    <record id="wh_material_inent_po_rule" model="ir.rule">
+        <field name="name">Purchase Mgr WH Indents</field>
+        <field ref="model_warehouse_indent" name="model_id"/>
+        <field name="domain_force">[('project_id.purchase_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('purchase.group_purchase_manager'))]"/>
+    </record> 
+    
+    <record id="wh_material_inent_director_rule" model="ir.rule">
+        <field name="name">Director WH Indents</field>
+        <field ref="model_warehouse_indent" name="model_id"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_director_user'))]"/>
+    </record>
+    
+    <!-- Daily Update Rules -->
+    
+    <record id="daily_update_supervisor_rule" model="ir.rule">
+        <field name="name">Supervisor Daily Update</field>
+        <field ref="model_project_dailyupdate" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('supervisor_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_supervisor_user'))]"/>
+    </record>
+
+    <record id="daily_update_sm_rule" model="ir.rule">
+        <field name="name">Store Mgr Daily Update</field>
+        <field ref="model_project_dailyupdate" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('store_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_store_manager'))]"/>
+    </record>
+    
+    <record id="daily_update_apm_rule" model="ir.rule">
+        <field name="name">Assistant Proj Mgr Daily Update</field>
+        <field ref="model_project_dailyupdate" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('ass_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_apm_user'))]"/>
+    </record>
+    
+    <record id="daily_update_pm_rule" model="ir.rule">
+        <field name="name">Proj Mgr Daily Update</field>
+        <field ref="model_project_dailyupdate" name="model_id"/>
+        <field name="domain_force">['|',('name','=',user.id),('project_id.project_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_pm_user'))]"/>
+    </record> 
+    
+    <record id="daily_update_director_rule" model="ir.rule">
+        <field name="name">Director Daily Update</field>
+        <field ref="model_project_dailyupdate" name="model_id"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_director_user'))]"/>
+    </record>
+    
+    <!-- Services Rules -->
+    
+    <record id="invoice_advance_supervisor_rule" model="ir.rule">
+        <field name="name">Supervisor Invoice Advance</field>
+        <field ref="model_invoice_advance" name="model_id"/>
+        <field name="domain_force">[('user_id','=',user.id)]</field> 
+        <field name="groups" eval="[(4, ref('crdv_project.group_supervisor_user'))]"/>
+    </record>
+    
+    <record id="invoice_advance_sm_rule" model="ir.rule">
+        <field name="name">Store Mgr Invoice Advance</field>
+        <field ref="model_invoice_advance" name="model_id"/>
+        <field name="domain_force">[('store_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_store_manager'))]"/>
+    </record>
+    
+    <record id="invoice_advance_apm_rule" model="ir.rule">
+        <field name="name">Assistant Proj Mgr Invoice Advance</field>
+        <field ref="model_invoice_advance" name="model_id"/>
+        <field name="domain_force">[('ass_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_apm_user'))]"/>
+    </record>
+    
+    <record id="invoice_advance_pm_rule" model="ir.rule">
+        <field name="name">Proj Mgr Invoice Advance</field>
+        <field ref="model_invoice_advance" name="model_id"/>
+        <field name="domain_force">[('project_id.project_mgr_id','=',user.id)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_pm_user'))]"/>
+    </record>
+    
+    <record id="invoice_advance_director_rule" model="ir.rule">
+        <field name="name">Director Invoice Advance</field>
+        <field ref="model_invoice_advance" name="model_id"/>
+        <field name="domain_force">[(1,'=',1)]</field>
+        <field name="groups" eval="[(4, ref('crdv_project.group_director_user'))]"/>
+    </record>
+    
+    <!-- Material Return -->
+    
+    
+    </data>
+</odoo>
